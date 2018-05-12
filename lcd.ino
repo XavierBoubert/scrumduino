@@ -7,15 +7,14 @@
 #define PAGE_ADD_POINTS 4
 #define PAGE_SET_DAILY 5
 
-#define CHAR_PLAIN 1
-#define CHAR_SMILE 2
-#define CHAR_IDLE 3
-#define CHAR_SAD 4
-#define CHAR_ARROW_RIGHT 5
-// Index 6 is bugged
-#define CHAR_CUP 7
-#define CHAR_SLASH 8
-#define CHAR_COUNTERSLASH 9
+#define CHAR_PLAIN 0
+#define CHAR_SMILE 1
+#define CHAR_IDLE 2
+#define CHAR_SAD 3
+#define CHAR_ARROW_RIGHT 4
+#define CHAR_CUP 5
+#define CHAR_SLASH 6
+#define CHAR_COUNTERSLASH 7
 
 #define NOTE_C4  262
 #define NOTE_D4  294
@@ -153,6 +152,8 @@ char musicNotes[] = "cesagecAFFFG FFFGseeee";
 int musicBeats[] = { 3, 2, 2, 1, 3, 2, 2, 1, 1, 1, 1, 2, 5, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1};
 int musicTempo = 125;
 
+int musicMode = 0;
+
 const int dailySpeed = 1.5;
 
 void dailyAnimation(int animStep = 0) {
@@ -274,7 +275,7 @@ void dailyAnimation(int animStep = 0) {
     playDaily();
 
     change_page(PAGE_HOME);
-    
+
     return;
   }
 
@@ -286,54 +287,67 @@ void dailyAnimation(int animStep = 0) {
 }
 
 int dailyNotes[] = {
-   NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0, 
-   NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0, 
+   NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0,
+   NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
    NOTE_C5, NOTE_D5, NOTE_B4, NOTE_B4, 0,
    NOTE_A4, NOTE_G4, NOTE_A4, 0,
-   
-   NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0, 
-   NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0, 
+
+   NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0,
+   NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
    NOTE_C5, NOTE_D5, NOTE_B4, NOTE_B4, 0,
    NOTE_A4, NOTE_G4, NOTE_A4, 0,
-   
-   NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0, 
-   NOTE_A4, NOTE_C5, NOTE_D5, NOTE_D5, 0, 
+
+   NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0,
+   NOTE_A4, NOTE_C5, NOTE_D5, NOTE_D5, 0,
    NOTE_D5, NOTE_E5, NOTE_F5, NOTE_F5, 0,
    NOTE_E5, NOTE_D5, NOTE_E5, NOTE_A4, 0,
-   
-   NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0, 
-   NOTE_D5, NOTE_E5, NOTE_A4, 0, 
+
+   NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
+   NOTE_D5, NOTE_E5, NOTE_A4, 0,
    NOTE_A4, NOTE_C5, NOTE_B4, NOTE_B4, 0,
    NOTE_C5, NOTE_A4, 0, NOTE_A4, 0
 };
 
 int dailyDurations[] = {
-  125, 125, 250, 125, 125, 
   125, 125, 250, 125, 125,
   125, 125, 250, 125, 125,
-  125, 125, 375, 125, 
-  
-  125, 125, 250, 125, 125, 
+  125, 125, 250, 125, 125,
+  125, 125, 375, 125,
+
   125, 125, 250, 125, 125,
   125, 125, 250, 125, 125,
-  125, 125, 375, 125, 
-  
-  125, 125, 250, 125, 125, 
+  125, 125, 250, 125, 125,
+  125, 125, 375, 125,
+
+  125, 125, 250, 125, 125,
   125, 125, 250, 125, 125,
   125, 125, 250, 125, 125,
   125, 125, 125, 250, 125,
 
-  125, 125, 250, 125, 125, 
-  250, 125, 250, 125, 
+  125, 125, 250, 125, 125,
+  250, 125, 250, 125,
   125, 125, 250, 125, 125,
   125, 125, 15, 375, 500
 };
 
 void playDaily() {
-  for (int i = 0; i < 77; i++) {
+  if (musicMode == 2) {
+    delay(3000);
+
+    return;
+  }
+
+  int dailyLength = 77;
+  if (musicMode == 1) dailyLength = 18;
+
+  for (int i = 0; i < dailyLength; i++) {
     int wait = dailyDurations[i] * dailySpeed;
     tone(PIN_SPEAKER, dailyNotes[i], wait);
     delay(wait);
+  }
+
+  if (musicMode == 1) {
+    delay(3000);
   }
 }
 
@@ -348,7 +362,7 @@ void update_time_span() {
   if (timespan == 0) {
     return;
   }
-  
+
   secondCount++;
 
   if (secondCount == 10) {
@@ -384,24 +398,24 @@ String date_time() {
   return String(days) + "j " + String(hours) + ":" + String(minutes) + ":" + String(totalSeconds);
 }
 
-int input_button(int type) {
+int input_button(String type) {
   int typeIndex = 0;
   int result = 0;
-  
+
   if (type == "UP") typeIndex = 0;
   if (type == "DOWN") typeIndex = 1;
   if (type == "MENU") typeIndex = 2;
 
   int buttonUsed = digitalRead(buttonsPins[typeIndex]);
-  
+
   if (buttonUsed == 1) {
     if (buttonsCounts[typeIndex] == 0) {
       result = 1;
     }
-    
+
     ++buttonsCounts[typeIndex];
 
-    if (buttonsCounts[typeIndex] == 5) {
+    if (buttonsCounts[typeIndex] == 2) {
       buttonsCounts[typeIndex] = 0;
     }
   }
@@ -421,9 +435,9 @@ void setup(){
   lcd.createChar(CHAR_CUP, cupChar);
   lcd.createChar(CHAR_SLASH, slashChar);
   lcd.createChar(CHAR_COUNTERSLASH, counterslashChar);
-  
+
   lcd.begin(16, 2);
-  
+
   pinMode(PIN_BUTTON_UP, INPUT);
   pinMode(PIN_BUTTON_DOWN, INPUT);
   pinMode(PIN_BUTTON_MENU, INPUT);
@@ -451,7 +465,7 @@ void display_hours(bool setTimeSelected, int upInput, int downInput) {
     startHours--;
     if (startHours < 0) startHours = 23;
   }
-  
+
   display_time(setTimeSelected, hourSelection, startHours);
 }
 
@@ -464,7 +478,7 @@ void display_minutes(bool setTimeSelected, int upInput, int downInput) {
     startMinutes--;
     if (startMinutes < 0) startMinutes = 59;
   }
-  
+
   display_time(setTimeSelected, !hourSelection, startMinutes);
 }
 
@@ -477,7 +491,7 @@ void display_daily_hours(bool setTimeSelected, int upInput, int downInput) {
     dailyHours--;
     if (dailyHours < 0) dailyHours = 23;
   }
-  
+
   display_time(setTimeSelected, hourSelection, dailyHours);
 }
 
@@ -490,13 +504,13 @@ void display_daily_minutes(bool setTimeSelected, int upInput, int downInput) {
     dailyMinutes--;
     if (dailyMinutes < 0) dailyMinutes = 59;
   }
-  
+
   display_time(setTimeSelected, !hourSelection, dailyMinutes);
 }
 
 void change_page(int pageIndex) {
   clear_screen();
-  
+
   if (pageIndex == PAGE_MENU) {
     menuIndex = 0;
   }
@@ -512,7 +526,7 @@ void change_page(int pageIndex) {
   else if (pageIndex == PAGE_SET_DAILY) {
     hourSelection = true;
   }
-    
+
   page = pageIndex;
 }
 
@@ -531,13 +545,13 @@ void page_home(int upInput, int downInput, int menuInput) {
 
   int remaingDaysCount = sprintDuration - sprintPast;
   if (remaingDaysCount < 0) remaingDaysCount = 0;
-  
+
   String sprintNumberId = sprintNumber < 10 ? String(sprintNumber) + " " : String(sprintNumber);
   String remaingDays = remaingDaysCount < 10 ? " " + String(remaingDaysCount) : String(remaingDaysCount);
 
   long percent = (long) sprintAchives * 100;
   if (percent > 0) percent /= sprintGoal;
-  
+
   lcd.setCursor(0, 0);
   lcd.print("Sprint #" + sprintNumberId + "   " + remaingDays + "j");
   lcd.setCursor(0, 1);
@@ -570,7 +584,7 @@ void page_home(int upInput, int downInput, int menuInput) {
   }
 }
 
-void page_set_time(int upInput, int downInput, int menuInput) {  
+void page_set_time(int upInput, int downInput, int menuInput) {
   lcd.setCursor(0, 0);
   lcd.print("Set the time:");
   lcd.setCursor(0, 1);
@@ -585,7 +599,7 @@ void page_set_time(int upInput, int downInput, int menuInput) {
     }
     else {
       timespan = (timespan / ((long) 3600 * (long) 24)) + (startHours * 3600) + (startMinutes * 60);
-      
+
       change_page(PAGE_HOME);
 
       return;
@@ -595,12 +609,20 @@ void page_set_time(int upInput, int downInput, int menuInput) {
   display_hours(setTimeSelected, upInput, downInput);
   lcd.write(":");
   display_minutes(setTimeSelected, upInput, downInput);
-  
+
   setTimeSelectedCount++;
 
   if (setTimeSelectedCount == 8) {
     setTimeSelected = !setTimeSelected;
     setTimeSelectedCount = 0;
+  }
+}
+
+void set_music() {
+  musicMode++;
+
+  if (musicMode > 2) {
+    musicMode = 0;
   }
 }
 
@@ -610,12 +632,21 @@ String menu_item(int index) {
   if (index == 2) return "Set sprint     ";
   if (index == 3) return "Set daily      ";
   if (index == 4) return "Set time       ";
+  if (index == 5) {
+    String musicModeValue = "   ON";
+
+    if (musicMode == 1) musicModeValue = "SHORT";
+    if (musicMode == 2) musicModeValue = "  OFF";
+
+    return "Music:    " + musicModeValue;
+  }
+  if (index == 6) return "Play daily     ";
 
   return "               ";
 }
 
 void page_menu(int upInput, int downInput, int menuInput) {
-  int itemsLength = 5;
+  int itemsLength = 7;
 
   if (menuInput == 1) {
     if (menuIndex == 0) {
@@ -633,6 +664,13 @@ void page_menu(int upInput, int downInput, int menuInput) {
     else if (menuIndex == 4) {
       change_page(PAGE_SET_TIME);
     }
+    else if (menuIndex == 5) {
+      set_music();
+    }
+    else if (menuIndex == 6) {
+      clear_screen();
+      dailyAnimation();
+    }
 
     return;
   }
@@ -644,11 +682,11 @@ void page_menu(int upInput, int downInput, int menuInput) {
   if (downInput == 1 && menuIndex < itemsLength - 1) {
     menuIndex++;
   }
-  
+
   lcd.setCursor(0, 0);
   lcd.write(byte(CHAR_ARROW_RIGHT));
   lcd.print(menu_item(menuIndex));
-  lcd.setCursor(0, 1);  
+  lcd.setCursor(0, 1);
   lcd.write(" ");
   lcd.print(menu_item(menuIndex + 1));
 }
@@ -661,7 +699,7 @@ void page_set_sprint(int upInput, int downInput, int menuInput) {
     if (downInput == 1 && sprintNumber > 0) {
       sprintNumber--;
     }
-    
+
     lcd.setCursor(0, 0);
     lcd.print("Sprint number:");
     lcd.setCursor(0, 1);
@@ -674,7 +712,7 @@ void page_set_sprint(int upInput, int downInput, int menuInput) {
     if (downInput == 1 && sprintDuration > 1) {
       sprintDuration--;
     }
-    
+
     lcd.setCursor(0, 0);
     lcd.print("Sprint duration:");
     lcd.setCursor(0, 1);
@@ -687,7 +725,7 @@ void page_set_sprint(int upInput, int downInput, int menuInput) {
     if (downInput == 1 && sprintPast > 0) {
       sprintPast--;
     }
-    
+
     lcd.setCursor(0, 0);
     lcd.print("Sprint past:");
     lcd.setCursor(0, 1);
@@ -700,7 +738,7 @@ void page_set_sprint(int upInput, int downInput, int menuInput) {
     if (downInput == 1 && sprintGoal > 0) {
       sprintGoal--;
     }
-    
+
     lcd.setCursor(0, 0);
     lcd.print("Sprint points:");
     lcd.setCursor(0, 1);
@@ -713,7 +751,7 @@ void page_set_sprint(int upInput, int downInput, int menuInput) {
     if (downInput == 1 && sprintAchives > 0) {
       sprintAchives--;
     }
-    
+
     lcd.setCursor(0, 0);
     lcd.print("Sprint done pts:");
     lcd.setCursor(0, 1);
@@ -724,7 +762,7 @@ void page_set_sprint(int upInput, int downInput, int menuInput) {
 
     return;
   }
-  
+
   if (menuInput == 1) {
     setSprintStep++;
     clear_screen();
@@ -750,7 +788,7 @@ void page_add_points(int upInput, int downInput, int menuInput) {
 
   if (menuInput == 1) {
     int pointsToAdd = 0;
-    
+
     if (addPointsIndex == 1) pointsToAdd = 1;
     if (addPointsIndex == 2) pointsToAdd = 2;
     if (addPointsIndex == 3) pointsToAdd = 3;
@@ -774,16 +812,16 @@ void page_add_points(int upInput, int downInput, int menuInput) {
   if (downInput == 1 && addPointsIndex < itemsLength - 1) {
     addPointsIndex++;
   }
-  
+
   lcd.setCursor(0, 0);
   lcd.write(byte(CHAR_ARROW_RIGHT));
   lcd.print(point_item(addPointsIndex));
-  lcd.setCursor(0, 1);  
+  lcd.setCursor(0, 1);
   lcd.write(" ");
   lcd.print(point_item(addPointsIndex + 1));
 }
 
-void page_set_daily(int upInput, int downInput, int menuInput) {  
+void page_set_daily(int upInput, int downInput, int menuInput) {
   lcd.setCursor(0, 0);
   lcd.print("Daily's time:");
   lcd.setCursor(0, 1);
@@ -806,7 +844,7 @@ void page_set_daily(int upInput, int downInput, int menuInput) {
   display_daily_hours(setTimeSelected, upInput, downInput);
   lcd.write(":");
   display_daily_minutes(setTimeSelected, upInput, downInput);
-  
+
   setTimeSelectedCount++;
 
   if (setTimeSelectedCount == 8) {
