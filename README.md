@@ -1,3 +1,3 @@
 # Scrumduino
 
-Hello
+![screenshot](screenshot.png)
